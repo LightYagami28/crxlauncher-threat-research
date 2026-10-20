@@ -1,0 +1,10 @@
+Type,Value,Description,Severity
+Extension ID,kiilhncajadbgbmdbdcopdpnmdhlbdle,Chrome Web Store unique identifier for CRXLauncher,Critical
+Domain,crxlauncher.com,Command & Control and download redirect infrastructure,High
+Domain,www.crxlauncher.com,C2 Web endpoint,High
+IP Address,104.21.86.100,Cloudflare Anycast IP serving C2 domain,Medium
+IP Address,172.67.217.211,Cloudflare Anycast IP serving C2 domain,Medium
+GA4 ID,G-Z14126F651,Telemetry measurement ID used for covert user tracking,Medium
+Storage Key,crxlauncher__uuid,Local persistence key storing victim unique identifier,Low
+Storage Key,crxlauncher__app-files,Local storage key caching unpacked guest extension files,High
+Namespace,__crxlauncher_window_communication,Window postMessage namespace vulnerable to unauthenticated cross-tab injection,Critical

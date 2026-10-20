@@ -1,0 +1,27 @@
+{
+    "type": "bundle",
+    "id": "bundle--8f912c77-4b11-49e0-82bb-27103a890e12",
+    "objects": [
+        {
+            "type": "malware",
+            "spec_version": "2.1",
+            "id": "malware--3c891e44-59bb-41a2-8921-18274acb9011",
+            "name": "CRXLauncher CEVM Dropper",
+            "is_family": false,
+            "description": "Chrome extension functioning as an in-browser virtual machine dropper for adware and link hijacking.",
+            "malware_types": [
+                "dropper",
+                "adware"
+            ]
+        },
+        {
+            "type": "indicator",
+            "spec_version": "2.1",
+            "id": "indicator--9ab12488-821b-4cd1-90a1-77218bbca012",
+            "name": "CRXLauncher C2 Domain",
+            "pattern": "[domain-name:value = 'crxlauncher.com']",
+            "pattern_type": "stix",
+            "valid_from": "2025-06-03T00:00:00Z"
+        }
+    ]
+}

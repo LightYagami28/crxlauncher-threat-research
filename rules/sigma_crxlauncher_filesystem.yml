@@ -1,0 +1,27 @@
+title: CRXLauncher Extension Local Persistence Artifacts
+id: 4b21ef88-299a-4c91-9cb7-742918bc3091
+status: experimental
+description: Detects the presence of CRXLauncher unpacked files and database keys on Windows workstations
+references:
+    - https://github.com/LightYagami28/crxlauncher-threat-research
+author: Security Research Team
+date: 2026-10-20
+logsource:
+    category: file_event
+detection:
+    selection_folder:
+        TargetFilename|contains:
+            - 'kiilhncajadbgbmdbdcopdpnmdhlbdle'
+    selection_files:
+        TargetFilename|endswith:
+            - '\assets\js\bg.js'
+            - '\assets\js\brg.js'
+            - '\assets\js\vendor.js'
+            - '\assets\js\offscr.js'
+    condition: selection_folder or selection_files
+falsepositives:
+    - Security analysts investigating the artifact in isolated labs
+level: medium
+tags:
+    - attack.persistence
+    - attack.t1176

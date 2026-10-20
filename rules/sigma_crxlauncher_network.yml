@@ -1,0 +1,21 @@
+title: CRXLauncher Malicious Extension C2 Communication
+id: 8f9b2d41-3b7a-4c28-98e1-5e26b1c09a82
+status: experimental
+description: Detects outbound DNS queries and HTTP/HTTPS traffic to the CRXLauncher command and control infrastructure
+references:
+    - https://github.com/LightYagami28/crxlauncher-threat-research
+author: Security Research Team
+date: 2026-10-20
+logsource:
+    category: dns
+detection:
+    selection:
+        query|contains:
+            - 'crxlauncher.com'
+    condition: selection
+falsepositives:
+    - Unlikely during normal enterprise workstation operations
+level: high
+tags:
+    - attack.command_and_control
+    - attack.t1071.001

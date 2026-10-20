@@ -1,0 +1,40 @@
+{
+    "report_date": "2026-10-20",
+    "threat_actor": "SilentDrop / FileCR Syndicated Adware",
+    "campaign": "CRXLauncher Dropper",
+    "extension_id": "kiilhncajadbgbmdbdcopdpnmdhlbdle",
+    "extension_version": "1.1.0",
+    "active_victims": "1,000,000+",
+    "domains": [
+        "crxlauncher.com",
+        "www.crxlauncher.com"
+    ],
+    "ip_addresses": [
+        "104.21.86.100",
+        "172.67.217.211",
+        "2606:4700:3034::ac43:d9d3",
+        "2606:4700:3032::6815:5664"
+    ],
+    "telemetry": {
+        "endpoint": "https://www.google-analytics.com/mp/collect",
+        "measurement_id": "G-Z14126F651",
+        "api_secret": "NqpDuhxQTVSqAVkEgU4nPQ"
+    },
+    "storage_keys": [
+        "crxlauncher__uuid",
+        "crxlauncher__app-data",
+        "crxlauncher__app-files",
+        "crxlauncher__compiled-data",
+        "crxlauncher__ga4-events",
+        "crxlauncher__update-status"
+    ],
+    "window_message_namespaces": [
+        "__crxlauncher_window_communication",
+        "__crxlauncher_runtime_message__"
+    ],
+    "mail_servers": [
+        "mx.zoho.com",
+        "mx2.zoho.com",
+        "mx3.zoho.com"
+    ]
+}
