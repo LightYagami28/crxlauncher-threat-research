@@ -20,7 +20,7 @@ rule ChromeExt_CRXLauncher_Dropper {
         $s3 = "pre_cl_loglevel__v3" ascii wide
         
         // Trusted Types neutralization signature
-        $s4 = "window.trustedTypes?.createPolicy("default"" ascii wide
+        $s4 = "window.trustedTypes?.createPolicy(\"default\"" ascii wide
         
         // Virtual Chrome environment methods
         $s5 = "main: get sandbox content script" ascii wide

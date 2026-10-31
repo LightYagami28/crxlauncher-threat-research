@@ -5,6 +5,8 @@
         {
             "type": "malware",
             "spec_version": "2.1",
+            "created": "2026-10-20T00:00:00.000Z",
+            "modified": "2026-10-20T00:00:00.000Z",
             "id": "malware--3c891e44-59bb-41a2-8921-18274acb9011",
             "name": "CRXLauncher CEVM Dropper",
             "is_family": false,
@@ -17,6 +19,8 @@
         {
             "type": "indicator",
             "spec_version": "2.1",
+            "created": "2026-10-20T00:00:00.000Z",
+            "modified": "2026-10-20T00:00:00.000Z",
             "id": "indicator--9ab12488-821b-4cd1-90a1-77218bbca012",
             "name": "CRXLauncher C2 Domain",
             "pattern": "[domain-name:value = 'crxlauncher.com']",
