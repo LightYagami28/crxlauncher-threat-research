@@ -10,7 +10,7 @@
 ### Added
 - `SPEC.md`, `CONTRIBUTING.md`, `SECURITY.md`, this changelog.
 - `scripts/check_artifacts.py` and tests on synthetic data.
-- CI: yamllint, validation, tests and gitleaks (actions pinned by SHA); `.gitleaks.toml`, `.yamllint`.
+- CI: yamllint, validation, tests and gitleaks (actions pinned by SHA, dependencies locked with hashes); `.gitleaks.toml`, `.yamllint`.
 
 No new indicators were added.
 

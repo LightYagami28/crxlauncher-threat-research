@@ -13,7 +13,7 @@ Contributions are welcome: corrections, better detections, and independently ver
 ## Workflow
 
 1. Fork, create a branch, make the change.
-2. `pip install -r requirements.txt`
+2. `pip install --require-hashes --only-binary :all: -r requirements.txt`
 3. Run `python scripts/check_artifacts.py`, `python -m unittest discover -s tests` and
    `yamllint -c .yamllint rules .github`.
 4. Add or update a test in `tests/` when you change a rule (synthetic strings only).

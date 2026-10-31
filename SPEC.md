@@ -109,7 +109,7 @@ No new indicators were added in this pass.
 | actions/checkout | 7.0.1 |
 | actions/setup-python | 7.1.0 |
 
-Actions are pinned by commit SHA with the tag in a comment.
+Actions are pinned by commit SHA with the tag in a comment. Python dependencies are locked with hashes in `requirements.txt` (generated from `requirements.in`) and installed with `--require-hashes --only-binary :all:`.
 
 ## 10. Security
 

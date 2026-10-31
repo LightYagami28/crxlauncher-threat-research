@@ -65,7 +65,7 @@ an isolated lab; do not open it on a machine you care about.
 
 ## Requirements and usage
 
-- Python 3.14 (any recent 3.x works), `pip install -r requirements.txt` (yara-x, PyYAML, yamllint).
+- Python 3.14 (any recent 3.x works), `pip install --require-hashes --only-binary :all: -r requirements.txt` (yara-x, PyYAML, yamllint; versions and hashes are pinned, direct dependencies live in `requirements.in`, regenerate with `uv pip compile requirements.in --universal --generate-hashes -o requirements.txt`).
 - Validate all artifacts: `python scripts/check_artifacts.py` (prints `OK`, exit code 0).
 - Run tests: `python -m unittest discover -s tests -v`.
 - Lint YAML: `yamllint -c .yamllint rules .github`.
