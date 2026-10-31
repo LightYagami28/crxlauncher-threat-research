@@ -35,20 +35,47 @@ This repository contains comprehensive technical documentation, reverse-engineer
 
 ```
 ├── README.md                                    # This document
+├── SPEC.md                                      # Methodology, scope, detection logic and known limits
 ├── RESEARCH_REPORT.md                           # Exhaustive technical whitepaper
 ├── CRXLauncher_Deep_Forensic_Analysis_2026.pdf  # Compiled publication-ready PDF paper
-├── DISCLOSURE_NOTICE.md                         # Coordinated disclosure report for Google & CERTs
+├── CONTRIBUTING.md / SECURITY.md / CHANGELOG.md
 ├── rules/
 │   ├── crxlauncher.yar                          # YARA detection rule
-│   ├── sigma_crxlauncher_network.yml            # Sigma rule for DNS/HTTP C2 network traffic
-│   └── sigma_crxlauncher_filesystem.yml         # Sigma rule for EDR filesystem/storage persistence
+│   ├── sigma_crxlauncher_network.yml            # Sigma rule for DNS C2 traffic
+│   └── sigma_crxlauncher_filesystem.yml         # Sigma rule for filesystem artifacts
 ├── threat-intel/
 │   ├── iocs.json                                # Indicators of Compromise in JSON
 │   ├── iocs.csv                                 # Indicators of Compromise in CSV
-│   └── stix_bundle.json                         # STIX 2.1 Threat Intel Objects bundle
-└── poc/
-    └── postmessage_audit.html                   # Defensive audit script to verify postMessage origin flaw
+│   └── stix_bundle.json                         # STIX 2.1 bundle
+├── poc/
+│   └── postmessage_audit.html                   # Defensive probe page (read the warning below before use)
+├── scripts/check_artifacts.py                   # Validates IoCs, STIX, Sigma and YARA files
+├── tests/test_artifacts.py                      # Tests on synthetic, harmless data
+└── .github/workflows/ci.yml                     # yamllint, validation, tests, gitleaks
 ```
+
+---
+
+## Safety
+
+This is threat research. **Never install, load or run the analyzed extension, its scripts or any sample.**
+Everything in this repository is treated as data: rules are tested only against synthetic strings written in
+`tests/`, and no sample is stored here. The page in `poc/` is a probe meant for a throwaway browser profile in
+an isolated lab; do not open it on a machine you care about.
+
+## Requirements and usage
+
+- Python 3.14 (any recent 3.x works), `pip install --require-hashes --only-binary :all: -r requirements.txt` (yara-x, PyYAML, yamllint; versions and hashes are pinned, direct dependencies live in `requirements.in`, regenerate with `uv pip compile requirements.in --universal --generate-hashes -o requirements.txt`).
+- Validate all artifacts: `python scripts/check_artifacts.py` (prints `OK`, exit code 0).
+- Run tests: `python -m unittest discover -s tests -v`.
+- Lint YAML: `yamllint -c .yamllint rules .github`.
+- Secret scan: `gitleaks detect -c .gitleaks.toml`.
+- Use the rules: load `rules/crxlauncher.yar` with YARA or YARA-X (`yr scan`), convert the Sigma rules with
+  `sigma-cli` to your SIEM backend, import `threat-intel/stix_bundle.json` into a STIX 2.1 consumer.
+- No configuration or environment variables are needed.
+
+CI (`.github/workflows/ci.yml`) runs lint, validation, tests and a gitleaks scan on every push and pull request.
+See [SPEC.md](SPEC.md) for methodology, detection logic and limits.
 
 ---
 
@@ -64,7 +91,7 @@ This repository contains comprehensive technical documentation, reverse-engineer
 - **C2 Domain:** `crxlauncher.com`, `www.crxlauncher.com`
 - **Cloudflare Anycast IPs:** `104.21.86.100`, `172.67.217.211`
 - **IPv6:** `2606:4700:3034::ac43:d9d3`, `2606:4700:3032::6815:5664`
-- **Telemetry ID:** `G-Z14126F651` (API Secret: `NqpDuhxQTVSqAVkEgU4nPQ`)
+- **Telemetry ID:** `G-Z14126F651` (the extension also embeds a GA4 API secret, listed in `RESEARCH_REPORT.md` §5.2; it belongs to the analyzed extension, not to this repository)
 - **Mail Servers:** `mx.zoho.com`, `mx2.zoho.com`, `mx3.zoho.com`
 
 ---
