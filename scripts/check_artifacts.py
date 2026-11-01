@@ -28,20 +28,31 @@ def load_iocs(root=ROOT):
     return data, rows
 
 
-def check_iocs(data, rows):
-    """Valida gli IOC e la coerenza CSV/JSON."""
-    errs = []
-    if not EXT_ID_RE.match(data.get("extension_id", "")):
-        errs.append("extension_id non valido (32 caratteri a-p)")
-    for d in data.get("domains", []):
-        if not DOMAIN_RE.match(d):
-            errs.append(f"dominio non valido: {d}")
-    for ip in data.get("ip_addresses", []):
-        try:
-            ipaddress.ip_address(ip)
-        except ValueError:
-            errs.append(f"IP non valido: {ip}")
-    # ogni riga CSV deve comparire nel JSON (il JSON è la fonte più completa)
+def _bad_ip(ip):
+    """True se la stringa non è un indirizzo IP."""
+    try:
+        ipaddress.ip_address(ip)
+    except ValueError:
+        return True
+    return False
+
+
+def check_ioc_values(data):
+    """Valida formato di extension_id, domini e IP."""
+    errs = [f"dominio non valido: {d}" for d in data.get("domains", []) if not DOMAIN_RE.match(d)]
+    errs += [f"IP non valido: {ip}" for ip in data.get("ip_addresses", []) if _bad_ip(ip)]
+    return errs + check_extension_id(data)
+
+
+def check_extension_id(data):
+    """Valida l'ID dell'estensione."""
+    if EXT_ID_RE.match(data.get("extension_id", "")):
+        return []
+    return ["extension_id non valido (32 caratteri a-p)"]
+
+
+def check_csv_rows(data, rows):
+    """Ogni riga CSV deve comparire nel JSON (il JSON è la fonte più completa)."""
     json_values = {
         "Extension ID": {data.get("extension_id")},
         "Domain": set(data.get("domains", [])),
@@ -50,6 +61,7 @@ def check_iocs(data, rows):
         "Storage Key": set(data.get("storage_keys", [])),
         "Namespace": set(data.get("window_message_namespaces", [])),
     }
+    errs = []
     for r in rows:
         known = json_values.get(r["Type"])
         if known is None:
@@ -59,23 +71,37 @@ def check_iocs(data, rows):
     return errs
 
 
-def check_stix_object(o):
-    """Valida un singolo oggetto STIX."""
-    errs = []
+def check_iocs(data, rows):
+    """Valida gli IOC e la coerenza CSV/JSON."""
+    return check_ioc_values(data) + check_csv_rows(data, rows)
+
+
+def check_stix_id(o):
+    """Valida id e UUID di un oggetto STIX."""
     t = o.get("type", "?")
     if not str(o.get("id", "")).startswith(t + "--"):
-        errs.append(f"STIX: id incoerente con il tipo ({t})")
-    else:
-        try:
-            uuid.UUID(o["id"].split("--", 1)[1])
-        except ValueError:
-            errs.append(f"STIX: UUID non valido in {o['id']}")
+        return [f"STIX: id incoerente con il tipo ({t})"]
+    try:
+        uuid.UUID(o["id"].split("--", 1)[1])
+    except ValueError:
+        return [f"STIX: UUID non valido in {o['id']}"]
+    return []
+
+
+def check_stix_fields(o):
+    """Valida versione e campi obbligatori di un oggetto STIX."""
+    errs = []
     if o.get("spec_version") != "2.1":
         errs.append(f"STIX: spec_version mancante in {o.get('id')}")
-    for k in ("created", "modified"):
-        if k not in o:
-            errs.append(f"STIX: campo obbligatorio '{k}' mancante in {o.get('id')}")
-    if t == "indicator" and not {"pattern", "pattern_type", "valid_from"} <= o.keys():
+    errs += [f"STIX: campo obbligatorio '{k}' mancante in {o.get('id')}"
+             for k in ("created", "modified") if k not in o]
+    return errs
+
+
+def check_stix_object(o):
+    """Valida un singolo oggetto STIX."""
+    errs = check_stix_id(o) + check_stix_fields(o)
+    if o.get("type") == "indicator" and not {"pattern", "pattern_type", "valid_from"} <= o.keys():
         errs.append(f"STIX: indicator incompleto {o.get('id')}")
     return errs
 
@@ -90,22 +116,27 @@ def check_stix(bundle):
     return errs
 
 
-def check_sigma(path):
-    """Valida una regola Sigma."""
-    errs = []
-    doc = yaml.safe_load(path.read_text(encoding="utf-8"))
-    missing = SIGMA_KEYS - set(doc)
-    if missing:
-        errs.append(f"{path.name}: chiavi mancanti {sorted(missing)}")
+def _sigma_id_ok(doc):
+    """True se l'id della regola Sigma è un UUID."""
     try:
         uuid.UUID(str(doc.get("id")))
     except ValueError:
-        errs.append(f"{path.name}: id non è un UUID")
-    cond = doc.get("detection", {}).get("condition")
-    names = set(doc.get("detection", {})) - {"condition"}
-    if not cond or not any(n in cond for n in names):
-        errs.append(f"{path.name}: condition non referenzia alcuna selection")
-    return errs
+        return False
+    return True
+
+
+def check_sigma(path):
+    """Valida una regola Sigma."""
+    doc = yaml.safe_load(path.read_text(encoding="utf-8"))
+    det = doc.get("detection", {})
+    cond = det.get("condition")
+    checks = [
+        (SIGMA_KEYS - set(doc), f"{path.name}: chiavi mancanti {sorted(SIGMA_KEYS - set(doc))}"),
+        (not _sigma_id_ok(doc), f"{path.name}: id non è un UUID"),
+        (not cond or not any(n in cond for n in set(det) - {"condition"}),
+         f"{path.name}: condition non referenzia alcuna selection"),
+    ]
+    return [msg for bad, msg in checks if bad]
 
 
 def compile_yara(root=ROOT):
@@ -113,8 +144,8 @@ def compile_yara(root=ROOT):
     return yara_x.compile((root / "rules/crxlauncher.yar").read_text(encoding="utf-8"))
 
 
-def main():
-    """Esegue tutte le validazioni; restituisce il codice di uscita."""
+def collect_errors():
+    """Raccoglie gli errori di tutte le validazioni."""
     errs = check_iocs(*load_iocs())
     stix = ROOT / "threat-intel/stix_bundle.json"
     errs += check_stix(json.loads(stix.read_text(encoding="utf-8")))
@@ -124,6 +155,12 @@ def main():
         compile_yara()
     except yara_x.CompileError as e:
         errs.append(f"YARA non compila: {e}")
+    return errs
+
+
+def main():
+    """Esegue tutte le validazioni; restituisce il codice di uscita."""
+    errs = collect_errors()
     for e in errs:
         print("ERRORE:", e)
     print("OK" if not errs else f"{len(errs)} errori")
