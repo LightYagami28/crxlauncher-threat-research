@@ -8,6 +8,8 @@ import yara_x
 
 _SPEC = importlib.util.spec_from_file_location(
     "check_artifacts", Path(__file__).resolve().parent.parent / "scripts/check_artifacts.py")
+if _SPEC is None or _SPEC.loader is None:
+    raise ImportError("check_artifacts non caricabile")
 ca = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(ca)
 
