@@ -5,6 +5,6 @@ useDefault = true
 
 # Il segreto GA4 qui sotto NON è nostro: è una stringa estratta dall'estensione
 # analizzata, citata come IOC pubblico. Nessun'altra eccezione.
-[[allowlists]]
+[allowlist]
 description = "IOC: API secret GA4 incorporato nell'estensione analizzata"
 regexes = ['''NqpDuhxQTVSqAVkEgU4nPQ''']
