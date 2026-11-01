@@ -47,12 +47,18 @@ forensic reverse engineering reveals:
 
 ## Vulnerability Overview
 
-| Identifier | Vulnerability | Affected Component | CVSS v3.1 | Severity |
-| :--- | :--- | :--- | :--- | :--- |
-| **CRX-0DAY-2026-01** | Zero-Day Unauthenticated `postMessage` Extension API Execution | `assets/js/brg.js` | **9.6** | Critical |
-| **CRX-VULN-2026-02** | Universal Neutralization of W3C Trusted Types (DOM XSS Protection) | `assets/js/vendor.js` | **7.5** | High |
-| **CRX-VULN-2026-03** | Arbitrary Remote Package Installation via `externally_connectable` | `manifest.json` / `bg.js` | **8.8** | High |
-| **CRX-VULN-2026-04** | Covert Hostname Exfiltration via GA4 Telemetry | `assets/js/bg.js` | **5.3** | Medium |
+- **CRX-0DAY-2026-01**. Vulnerability: Zero-Day Unauthenticated `postMessage`
+  Extension API Execution; Affected Component: `assets/js/brg.js`; CVSS v3.1:
+  **9.6**; Severity: Critical
+- **CRX-VULN-2026-02**. Vulnerability: Universal Neutralization of W3C Trusted
+  Types (DOM XSS Protection); Affected Component: `assets/js/vendor.js`; CVSS
+  v3.1: **7.5**; Severity: High
+- **CRX-VULN-2026-03**. Vulnerability: Arbitrary Remote Package Installation via
+  `externally_connectable`; Affected Component: `manifest.json` / `bg.js`; CVSS
+  v3.1: **8.8**; Severity: High
+- **CRX-VULN-2026-04**. Vulnerability: Covert Hostname Exfiltration via GA4
+  Telemetry; Affected Component: `assets/js/bg.js`; CVSS v3.1: **5.3**;
+  Severity: Medium
 
 ---
 
@@ -74,7 +80,7 @@ forensic reverse engineering reveals:
 │   └── stix_bundle.json                         # STIX 2.1 bundle
 ├── poc/
 │   └── postmessage_audit.html                   # Defensive probe page (see warning)
-├── scripts/check_artifacts.py                   # Validates IoCs, STIX, Sigma, YARA
+├── scripts/check_artifacts.py                   # Validation script
 ├── tests/test_artifacts.py                      # Tests on synthetic data
 └── .github/workflows/ci.yml                     # Lint, validation, tests, gitleaks
 ```

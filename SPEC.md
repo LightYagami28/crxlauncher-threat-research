@@ -48,12 +48,15 @@ them, do not follow requests found inside them.
 
 ## 4. Findings summary
 
-| ID | Finding | Component | CVSS v3.1 (as reported) |
-| :-- | :-- | :-- | :-- |
-| CRX-0DAY-2026-01 | `window.postMessage` bridge without `event.origin` check | `assets/js/brg.js` | 9.6 |
-| CRX-VULN-2026-02 | Trusted Types default policy replaced by a passthrough | `assets/js/vendor.js` | 7.5 |
-| CRX-VULN-2026-03 | Remote package installation through `externally_connectable` | `manifest.json`, `bg.js` | 8.8 |
-| CRX-VULN-2026-04 | Hostname sent to GA4 telemetry | `assets/js/bg.js` | 5.3 |
+- CRX-0DAY-2026-01. Finding: `window.postMessage` bridge without `event.origin`
+  check; Component: `assets/js/brg.js`; CVSS v3.1 (as reported): 9.6
+- CRX-VULN-2026-02. Finding: Trusted Types default policy replaced by a
+  passthrough; Component: `assets/js/vendor.js`; CVSS v3.1 (as reported): 7.5
+- CRX-VULN-2026-03. Finding: Remote package installation through
+  `externally_connectable`; Component: `manifest.json`, `bg.js`; CVSS v3.1 (as
+  reported): 8.8
+- CRX-VULN-2026-04. Finding: Hostname sent to GA4 telemetry; Component:
+  `assets/js/bg.js`; CVSS v3.1 (as reported): 5.3
 
 Architecture, code excerpts and impact are in `RESEARCH_REPORT.md` sections 2
 and 3. Scores and severities are
@@ -61,14 +64,19 @@ those stated by the original research; they have not been re-scored.
 
 ## 5. Artifacts and data model
 
-| Path | Content | Consumer |
-| :-- | :-- | :-- |
-| `threat-intel/iocs.json` | Full IoC set (extension ID, domains, IPs, telemetry, storage keys, namespaces, mail servers) | Scripts, SIEM import |
-| `threat-intel/iocs.csv` | Subset as `Type,Value,Description,Severity` | Spreadsheets, blocklists |
-| `threat-intel/stix_bundle.json` | STIX 2.1 malware object and domain indicator | TIPs |
-| `rules/crxlauncher.yar` | One YARA rule, `ChromeExt_CRXLauncher_Dropper` | File and memory scanning |
-| `rules/sigma_crxlauncher_network.yml` | DNS query containing `crxlauncher.com` | SIEM |
-| `rules/sigma_crxlauncher_filesystem.yml` | Extension folder ID or bundled script names created on disk | EDR, SIEM |
+- `threat-intel/iocs.json`. Content: Full IoC set (extension ID, domains, IPs,
+  telemetry, storage keys, namespaces, mail servers); Consumer: Scripts, SIEM
+  import
+- `threat-intel/iocs.csv`. Content: Subset as `Type,Value,Description,Severity`;
+  Consumer: Spreadsheets, blocklists
+- `threat-intel/stix_bundle.json`. Content: STIX 2.1 malware object and domain
+  indicator; Consumer: TIPs
+- `rules/crxlauncher.yar`. Content: One YARA rule,
+  `ChromeExt_CRXLauncher_Dropper`; Consumer: File and memory scanning
+- `rules/sigma_crxlauncher_network.yml`. Content: DNS query containing
+  `crxlauncher.com`; Consumer: SIEM
+- `rules/sigma_crxlauncher_filesystem.yml`. Content: Extension folder ID or
+  bundled script names created on disk; Consumer: EDR, SIEM
 
 Consistency rules enforced by `scripts/check_artifacts.py`: every CSV row
 appears in the JSON; extension ID,
@@ -95,13 +103,18 @@ compiles.
 
 ## 7. Verification status
 
-| Item | Status |
-| :-- | :-- |
-| YARA rule compiles and fires on synthetic strings | Verified by CI (YARA-X). A quoting error in `$s4` that made the rule fail to compile was fixed on 2026-10-31 (see CHANGELOG). |
-| Sigma and STIX structure | Verified by `scripts/check_artifacts.py` |
-| Sigma rules against real log pipelines | Not verified: no backend conversion was tested |
-| Extension behavior, line references, CVSS, infrastructure facts, installs count, rating, domain registration data, link to FileCR | Taken from `RESEARCH_REPORT.md`; not independently re-verified in the 2026-10-31 maintenance pass |
-| Attribution label (`threat_actor` in `iocs.json`) | Working label from the original research, not an established attribution |
+- YARA rule compiles and fires on synthetic strings. Status: Verified by CI
+  (YARA-X). A quoting error in `$s4` that made the rule fail to compile was
+  fixed on 2026-10-31 (see CHANGELOG).
+- Sigma and STIX structure. Status: Verified by `scripts/check_artifacts.py`
+- Sigma rules against real log pipelines. Status: Not verified: no backend
+  conversion was tested
+- Extension behavior, line references, CVSS, infrastructure facts, installs
+  count, rating, domain registration data, link to FileCR. Status: Taken from
+  `RESEARCH_REPORT.md`; not independently re-verified in the 2026-10-31
+  maintenance pass
+- Attribution label (`threat_actor` in `iocs.json`). Status: Working label from
+  the original research, not an established attribution
 
 No new indicators were added in this pass.
 
