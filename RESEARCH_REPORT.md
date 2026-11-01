@@ -380,16 +380,22 @@ policy.
 
 ## 4. Infrastructure & C2 Reconnaissance
 
-| Dimension | Details | Security Assessment |
-| :--- | :--- | :--- |
-| **Domain** | `crxlauncher.com` / `www.crxlauncher.com` | Registered 2025-06-03, Expires 2027-06-03 |
-| **Registrar** | NameCheap, Inc. | Identity redacted via *Withheld for Privacy* |
-| **Edge CDN** | Cloudflare Anycast (AS13335) | IPs: `104.21.86.100`, `172.67.217.211` |
-| **TLS Configuration** | TLS 1.3 (`TLS_AES_256_GCM_SHA384`) | Google Trust Services (`WE1`), Wildcard `*.crxlauncher.com` |
-| **Mail Services** | Zoho Mail (`mx.zoho.com`) | SPF configured, DMARC enforced (`p=reject`) |
-| **Backend Stack** | Node.js + Express.js + Helmet | Identified via strict response header fingerprinting |
-| **Cloaking Behavior** | `/download` endpoint | Issues HTTP 302 redirect directly to Google Web Store |
-| **Crawler Evasion** | `/robots.txt` | Custom Directive invoking EU Copyright Dir. 2019/790 to repel AI bots |
+- **Domain**. Details: `crxlauncher.com` / `www.crxlauncher.com`; Security
+  Assessment: Registered 2025-06-03, Expires 2027-06-03
+- **Registrar**. Details: NameCheap, Inc.; Security Assessment: Identity
+  redacted via *Withheld for Privacy*
+- **Edge CDN**. Details: Cloudflare Anycast (AS13335); Security Assessment: IPs:
+  `104.21.86.100`, `172.67.217.211`
+- **TLS Configuration**. Details: TLS 1.3 (`TLS_AES_256_GCM_SHA384`); Security
+  Assessment: Google Trust Services (`WE1`), Wildcard `*.crxlauncher.com`
+- **Mail Services**. Details: Zoho Mail (`mx.zoho.com`); Security Assessment:
+  SPF configured, DMARC enforced (`p=reject`)
+- **Backend Stack**. Details: Node.js + Express.js + Helmet; Security
+  Assessment: Identified via strict response header fingerprinting
+- **Cloaking Behavior**. Details: `/download` endpoint; Security Assessment:
+  Issues HTTP 302 redirect directly to Google Web Store
+- **Crawler Evasion**. Details: `/robots.txt`; Security Assessment: Custom
+  Directive invoking EU Copyright Dir. 2019/790 to repel AI bots
 
 ---
 
