@@ -18,7 +18,7 @@
     "telemetry": {
         "endpoint": "https://www.google-analytics.com/mp/collect",
         "measurement_id": "G-Z14126F651",
-        "api_secret": "NqpDuhxQTVSqAVkEgU4nPQ"
+        "ga4_collect_value": "NqpDuhxQTVSqAVkEgU4nPQ"
     },
     "storage_keys": [
         "crxlauncher__uuid",
