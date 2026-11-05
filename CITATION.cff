@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "Se usi questo repository citalo come segue."
+authors:
+  - name: Light Yagami
+    email: maule2703@gmail.com
+title: "CRXLauncher Threat Research"
+version: 0.1.0
+date-released: "2026-11-05"
+license: MIT
+keywords:
+  - "threat-intelligence"
+  - "chrome-extension"
+  - "malware-analysis"
