@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-11-12
+
+### Fixed
+
+- `scripts/check_artifacts.py`: a Sigma file that is empty, a list or has a
+  non-mapping `detection` is reported as an error instead of crashing.
+- Issue and pull request templates, `CODE_OF_CONDUCT.md`: Markdown conforming
+  to markdownlint.
+
+### Added
+
+- Tests for every negative path of the validator (coverage 73% to 99%).
+- CI: coverage upload to Codacy, skipped when `CODACY_PROJECT_TOKEN` is not
+  set.
+
 ## 2026-10-31
 
 ### Fixed

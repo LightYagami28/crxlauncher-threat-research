@@ -1,6 +1,8 @@
-"""Validazione statica degli artefatti del repo (IOC, STIX, Sigma, YARA).
+"""
+Validazione statica degli artefatti del repo (IOC, STIX, Sigma, YARA).
 
-Legge solo file di testo del repo come dati: non esegue nulla di ciò che contengono.
+Legge solo file di testo del repo come dati: non esegue nulla di ciò che
+contengono.
 Uso: python scripts/check_artifacts.py   (exit 1 se ci sono errori)
 """
 import csv
@@ -12,7 +14,7 @@ import uuid
 from pathlib import Path
 
 import yaml
-import yara_x
+import yara_x  # pyright: ignore[reportMissingImports]  # installato da requirements.txt
 
 ROOT = Path(__file__).resolve().parent.parent
 DOMAIN_RE = re.compile(r"^(?=.{1,253}$)([a-z0-9-]{1,63}\.)+[a-z]{2,}$")
@@ -128,7 +130,11 @@ def _sigma_id_ok(doc):
 def check_sigma(path):
     """Valida una regola Sigma."""
     doc = yaml.safe_load(path.read_text(encoding="utf-8"))
-    det = doc.get("detection", {})
+    if not isinstance(doc, dict):
+        return [f"{path.name}: il file non contiene una mappa YAML"]
+    det = doc.get("detection") or {}
+    if not isinstance(det, dict):
+        return [f"{path.name}: detection deve essere una mappa"]
     cond = det.get("condition")
     checks = [
         (SIGMA_KEYS - set(doc), f"{path.name}: chiavi mancanti {sorted(SIGMA_KEYS - set(doc))}"),
