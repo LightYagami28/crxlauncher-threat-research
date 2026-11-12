@@ -6,6 +6,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import yara_x  # pyright: ignore[reportMissingImports]  # installato da requirements.txt
 
@@ -185,18 +186,12 @@ class Main(unittest.TestCase):
 
     def test_main_con_errori(self):
         """Un errore di compilazione YARA porta a uscita 1."""
-        original = ca.compile_yara
-
         def broken():
             return yara_x.compile("rule x { condition: nonesiste }")
 
-        ca.compile_yara = broken
         out = io.StringIO()
-        try:
-            with contextlib.redirect_stdout(out):
-                self.assertEqual(ca.main(), 1)
-        finally:
-            ca.compile_yara = original
+        with mock.patch.object(ca, "compile_yara", broken), contextlib.redirect_stdout(out):
+            self.assertEqual(ca.main(), 1)
         self.assertIn("YARA non compila", out.getvalue())
 
 
