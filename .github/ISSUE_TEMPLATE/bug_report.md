@@ -1,7 +1,7 @@
 ---
 name: Bug report
 about: Segnala un problema
-title: "[Bug] "
+title: Bug report
 labels: bug
 assignees: LightYagami28
 ---
