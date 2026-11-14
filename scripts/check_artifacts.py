@@ -127,6 +127,25 @@ def _sigma_id_ok(doc):
     return True
 
 
+def _sigma_condition_ok(det):
+    """True se la condition della regola referenzia almeno una selection."""
+    cond = det.get("condition")
+    return bool(cond) and any(n in cond for n in set(det) - {"condition"})
+
+
+def _sigma_errors(name, doc, det):
+    """Restituisce gli errori di chiavi, id e condition della regola."""
+    errs = []
+    missing = SIGMA_KEYS - set(doc)
+    if missing:
+        errs.append(f"{name}: chiavi mancanti {sorted(missing)}")
+    if not _sigma_id_ok(doc):
+        errs.append(f"{name}: id non è un UUID")
+    if not _sigma_condition_ok(det):
+        errs.append(f"{name}: condition non referenzia alcuna selection")
+    return errs
+
+
 def check_sigma(path):
     """Valida una regola Sigma."""
     doc = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -135,14 +154,7 @@ def check_sigma(path):
     det = doc.get("detection") or {}
     if not isinstance(det, dict):
         return [f"{path.name}: detection deve essere una mappa"]
-    cond = det.get("condition")
-    checks = [
-        (SIGMA_KEYS - set(doc), f"{path.name}: chiavi mancanti {sorted(SIGMA_KEYS - set(doc))}"),
-        (not _sigma_id_ok(doc), f"{path.name}: id non è un UUID"),
-        (not cond or not any(n in cond for n in set(det) - {"condition"}),
-         f"{path.name}: condition non referenzia alcuna selection"),
-    ]
-    return [msg for bad, msg in checks if bad]
+    return _sigma_errors(path.name, doc, det)
 
 
 def compile_yara(root=ROOT):
