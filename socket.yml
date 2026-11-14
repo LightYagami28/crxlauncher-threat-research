@@ -1,0 +1,8 @@
+# Politica Socket.dev del repo (docs.socket.dev/docs/socket-yml).
+# Triage del report del 2026-11-14: categoria silenziata dopo revisione
+# puntuale dei pacchetti flaggati.
+version: 2
+
+issueRules:
+  # yara-x: install script di build standard.
+  installScripts: false
