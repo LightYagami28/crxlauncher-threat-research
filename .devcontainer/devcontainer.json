@@ -1,0 +1,5 @@
+{
+  "name": "CRXLauncher threat research",
+  "image": "mcr.microsoft.com/devcontainers/python:3.14",
+  "postCreateCommand": "pip install --require-hashes --only-binary :all: -r requirements.txt"
+}
