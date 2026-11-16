@@ -1,10 +1,8 @@
-"""
-Validazione statica degli artefatti del repo (IOC, STIX, Sigma, YARA).
+"""Validazione statica degli artefatti del repo (IOC, STIX, Sigma, YARA)."""
+# Legge solo file di testo del repo come dati: non esegue nulla di ciò che
+# contengono.
+# Uso: python scripts/check_artifacts.py   (exit 1 se ci sono errori)
 
-Legge solo file di testo del repo come dati: non esegue nulla di ciò che
-contengono.
-Uso: python scripts/check_artifacts.py   (exit 1 se ci sono errori)
-"""
 import csv
 import ipaddress
 import json
