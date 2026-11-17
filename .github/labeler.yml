@@ -1,0 +1,25 @@
+# Etichette per percorso, applicate da actions/labeler (.github/workflows/labeler.yml).
+documentazione:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.md'
+          - 'CITATION.cff'
+dipendenze:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'requirements.in'
+          - 'requirements.txt'
+          - '.github/dependabot.yml'
+qualità:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'tests/**'
+          - 'scripts/**'
+          - '.yamllint'
+          - '.pylintrc'
+sicurezza:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'rules/**'
+          - 'threat-intel/**'
+          - 'SECURITY.md'
