@@ -1,6 +1,6 @@
 """Test su dati innocui: stringhe sintetiche, nessun campione reale e nessuna esecuzione."""
-import importlib.util
 import contextlib
+import importlib.util
 import io
 import json
 import tempfile
