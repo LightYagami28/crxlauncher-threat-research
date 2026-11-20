@@ -1,5 +1,11 @@
 __pycache__/
-*.pyc
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
 
 # Segreti locali
 .env
@@ -7,5 +13,20 @@ __pycache__/
 !.env.example
 *.pem
 *.key
-coverage.xml
+
+# Tooling / cache
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.bandit/
 .coverage
+coverage.xml
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Log
+*.log
+bot.log
