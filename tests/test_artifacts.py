@@ -1,85 +1,16 @@
-"""Test su dati innocui: stringhe sintetiche, nessun campione reale e nessuna esecuzione."""
-import contextlib
-import importlib.util
-import io
+"""Pytest test suite for the CRXLauncher artifact static validator."""
+
+from __future__ import annotations
+
 import json
-import tempfile
-import unittest
+import logging
 from pathlib import Path
-from unittest import mock
+from typing import Any
 
-import yara_x  # pyright: ignore[reportMissingImports]  # installato da requirements.txt
+import pytest
+import yara_x
 
-_SPEC = importlib.util.spec_from_file_location(
-    "check_artifacts", Path(__file__).resolve().parent.parent / "scripts/check_artifacts.py")
-if _SPEC is None or _SPEC.loader is None:
-    raise ImportError("check_artifacts non caricabile")
-ca = importlib.util.module_from_spec(_SPEC)
-_SPEC.loader.exec_module(ca)
-
-
-class RepoArtifacts(unittest.TestCase):
-    """Gruppo RepoArtifacts."""
-
-    def test_iocs_coerenti(self):
-        """Test iocs coerenti."""
-        self.assertEqual(ca.check_iocs(*ca.load_iocs()), [])
-
-    def test_stix_valido(self):
-        """Test stix valido."""
-        stix = ca.ROOT / "threat-intel/stix_bundle.json"
-        b = json.loads(stix.read_text(encoding="utf-8"))
-        self.assertEqual(ca.check_stix(b), [])
-
-    def test_sigma_validi(self):
-        """Test sigma validi."""
-        for p in (ca.ROOT / "rules").glob("*.yml"):
-            self.assertEqual(ca.check_sigma(p), [], p.name)
-
-
-class Checker(unittest.TestCase):
-    """Gruppo Checker."""
-
-    def test_csv_non_nel_json_viene_rilevato(self):
-        """Test csv non nel json viene rilevato."""
-        data, rows = ca.load_iocs()
-        extra = {"Type": "Domain", "Value": "esempio.invalid", "Description": "", "Severity": ""}
-        rows = rows + [extra]
-        self.assertTrue(ca.check_iocs(data, rows))
-
-    def test_stix_senza_created_viene_rilevato(self):
-        """Test stix senza created viene rilevato."""
-        bundle = {"type": "bundle", "objects": [{"type": "malware", "spec_version": "2.1",
-                  "id": "malware--3c891e44-59bb-41a2-8921-18274acb9011"}]}
-        self.assertTrue(ca.check_stix(bundle))
-
-
-class YaraRule(unittest.TestCase):
-    """Gruppo YaraRule."""
-
-    @classmethod
-    def setUpClass(cls):
-        """Setupclass."""
-        cls.scanner = yara_x.Scanner(ca.compile_yara())
-
-    def hits(self, data):
-        """Hits."""
-        return [m.identifier for m in self.scanner.scan(data).matching_rules]
-
-    def test_testo_innocuo_non_corrisponde(self):
-        """Test testo innocuo non corrisponde."""
-        self.assertEqual(self.hits(b"console.log('hello world');"), [])
-
-    def test_tre_stringhe_sintetiche_corrispondono(self):
-        """Test tre stringhe sintetiche corrispondono."""
-        data = (b"__crxlauncher_window_communication "
-                b"__crxlauncher_runtime_message__ pre_cl_loglevel__v3")
-        self.assertEqual(self.hits(data), ["ChromeExt_CRXLauncher_Dropper"])
-
-    def test_una_sola_stringa_non_basta(self):
-        """Test una sola stringa non basta."""
-        self.assertEqual(self.hits(b"__crxlauncher_window_communication"), [])
-
+import scripts.check_artifacts as artifact_checker
 
 VALID_UUID = "3c891e44-59bb-41a2-8921-18274acb9011"
 SIGMA_OK = """title: t
@@ -94,106 +25,216 @@ level: low
 """
 
 
-class IocValues(unittest.TestCase):
-    """Valori IOC malformati."""
-
-    def test_dominio_ip_e_id_non_validi(self):
-        """Dominio, IP ed extension_id malformati vengono segnalati."""
-        data = {"domains": ["NON VALIDO"], "ip_addresses": ["999.1.1.1"],
-                "extension_id": "xyz"}
-        errs = ca.check_ioc_values(data)
-        self.assertEqual(len(errs), 3, errs)
-
-    def test_valori_validi(self):
-        """Valori ben formati non generano errori."""
-        data = {"domains": ["esempio.invalid"], "ip_addresses": ["192.0.2.1"],
-                "extension_id": "a" * 32}
-        self.assertEqual(ca.check_ioc_values(data), [])
-
-    def test_tipo_csv_sconosciuto(self):
-        """Un tipo CSV non previsto viene segnalato."""
-        errs = ca.check_csv_rows({}, [{"Type": "Boh", "Value": "x"}])
-        self.assertEqual(errs, ["tipo CSV sconosciuto: Boh"])
+@pytest.fixture(scope="module")
+def iocs() -> tuple[dict[str, Any], list[dict[str, str]]]:
+    """Load the repository IOC artifacts (JSON source of truth + CSV rows)."""
+    return artifact_checker.load_iocs(artifact_checker.ROOT)
 
 
-class StixObjects(unittest.TestCase):
-    """Oggetti STIX malformati."""
-
-    def test_id_incoerente(self):
-        """Un id che non inizia col tipo viene segnalato."""
-        errs = ca.check_stix_id({"type": "malware", "id": "tool--" + VALID_UUID})
-        self.assertEqual(len(errs), 1)
-
-    def test_uuid_non_valido(self):
-        """Un UUID malformato viene segnalato."""
-        errs = ca.check_stix_id({"type": "malware", "id": "malware--nope"})
-        self.assertIn("UUID non valido", errs[0])
-
-    def test_bundle_e_indicator_incompleti(self):
-        """Tipo bundle errato e indicator senza pattern vengono segnalati."""
-        obj = {"type": "indicator", "id": "indicator--" + VALID_UUID,
-               "spec_version": "2.1", "created": "x", "modified": "x"}
-        errs = ca.check_stix({"type": "altro", "objects": [obj]})
-        self.assertEqual(len(errs), 2, errs)
-
-    def test_spec_version_mancante(self):
-        """Senza spec_version 2.1 l'oggetto viene segnalato."""
-        errs = ca.check_stix_fields({"id": "x", "created": "x", "modified": "x"})
-        self.assertEqual(len(errs), 1)
+@pytest.fixture(scope="module")
+def stix_bundle() -> dict[str, Any]:
+    """Load the repository STIX bundle."""
+    path = artifact_checker.ROOT / "threat-intel" / "stix_bundle.json"
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
-class SigmaRules(unittest.TestCase):
-    """Regole Sigma sintetiche scritte in una cartella temporanea."""
+@pytest.fixture(scope="module")
+def scanner() -> yara_x.Scanner:
+    """Compile the repository YARA rule once per test module."""
+    source = (artifact_checker.ROOT / "rules" / "crxlauncher.yar").read_text(
+        encoding="utf-8"
+    )
+    return yara_x.Scanner(artifact_checker.compile_yara(source))
 
-    def check(self, text):
-        """Scrive la regola e restituisce gli errori."""
-        with tempfile.TemporaryDirectory() as d:
-            path = Path(d) / "r.yml"
-            path.write_text(text, encoding="utf-8")
-            return ca.check_sigma(path)
 
-    def test_regola_valida(self):
-        """La regola minima completa passa."""
-        self.assertEqual(self.check(SIGMA_OK), [])
+class TestIocValidation:
+    """Validation of the IOC data structures."""
 
-    def test_id_e_condition_errati(self):
-        """Id non UUID e condition senza selection vengono segnalati."""
+    def test_valid_values_produce_no_errors(
+        self, iocs: tuple[dict[str, Any], list[dict[str, str]]]
+    ) -> None:
+        """Well-formed domains, IPs and extension ids yield no error."""
+        data, _rows = iocs
+        assert artifact_checker.check_ioc_values(data) == []
+        assert artifact_checker.check_extension_id(data) == []
+
+    @pytest.mark.parametrize(
+        ("domain", "should_be_valid"),
+        [
+            ("NON VALIDO", False),
+            ("bad domain", False),
+            ("esempio.com", True),
+            ("sub.example.co.uk", True),
+        ],
+    )
+    def test_domain_validation(self, domain: str, should_be_valid: bool) -> None:
+        """Domain validation accepts valid hostnames and rejects malformed ones."""
+        assert artifact_checker.is_valid_domain(domain) is should_be_valid
+
+    @pytest.mark.parametrize(
+        ("ip_address", "should_be_valid"),
+        [
+            ("999.1.1.1", False),
+            ("192.0.2.1", True),
+            ("not-an-ip", False),
+            ("2001:db8::1", True),
+        ],
+    )
+    def test_ip_validation(self, ip_address: str, should_be_valid: bool) -> None:
+        """IP validation accepts parseable addresses and rejects garbage."""
+        assert artifact_checker.is_valid_ip_address(ip_address) is should_be_valid
+
+    @pytest.mark.parametrize(
+        ("extension_id", "should_be_valid"),
+        [
+            ("a" * 32, True),
+            ("xyz", False),
+            ("A" * 32, False),
+        ],
+    )
+    def test_extension_id_validation(
+        self, extension_id: str, should_be_valid: bool
+    ) -> None:
+        """Extension ids must be 32 lowercase ``[a-p]`` characters."""
+        assert artifact_checker.is_valid_extension_id(extension_id) is should_be_valid
+
+
+class TestChecker:
+    """Cross-file IOC consistency checks."""
+
+    def test_csv_extra_row_is_detected(
+        self, iocs: tuple[dict[str, Any], list[dict[str, str]]]
+    ) -> None:
+        """A CSV row missing from the JSON source of truth is reported."""
+        data, rows = iocs
+        rows = rows + [
+            {
+                "Type": "Domain",
+                "Value": "esempio.invalid",
+                "Description": "",
+                "Severity": "",
+            },
+        ]
+        assert artifact_checker.check_iocs(data, rows)
+
+    def test_consistent_iocs_are_valid(
+        self, iocs: tuple[dict[str, Any], list[dict[str, str]]]
+    ) -> None:
+        """The shipped IOC set must be internally consistent."""
+        assert artifact_checker.check_iocs(*iocs) == []
+
+
+class TestStix:
+    """STIX bundle validation."""
+
+    def test_inconsistent_id_is_detected(self) -> None:
+        """STIX ids must start with the object type and hold a valid UUID."""
+        errors = artifact_checker.check_stix_id(
+            {"type": "malware", "id": "tool--" + VALID_UUID}
+        )
+        assert len(errors) == 1
+
+    def test_invalid_uuid_is_detected(self) -> None:
+        """Malformed STIX UUIDs are reported."""
+        errors = artifact_checker.check_stix_id(
+            {"type": "malware", "id": "malware--nope"}
+        )
+        assert errors and "UUID non valido" in errors[0]
+
+    def test_incomplete_bundle_is_detected(self) -> None:
+        """Bundles with wrong type or incomplete indicators are reported."""
+        indicator = {
+            "type": "indicator",
+            "id": f"indicator--{VALID_UUID}",
+            "spec_version": "2.1",
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
+        }
+        errors = artifact_checker.check_stix({"type": "altro", "objects": [indicator]})
+        assert errors == [
+            "STIX: type deve essere 'bundle'",
+            f"STIX: indicator incompleto indicator--{VALID_UUID}",
+        ]
+        incomplete = {k: v for k, v in indicator.items() if k != "pattern"}
+        assert artifact_checker.check_stix_object(incomplete)
+
+
+class TestSigma:
+    """Sigma rule validation."""
+
+    def check(self, text: str, tmp_path: Path) -> list[str]:
+        """Write a temporary Sigma rule and validate it."""
+        path = tmp_path / "rule.yml"
+        path.write_text(text, encoding="utf-8")
+        return artifact_checker.check_sigma(path)
+
+    def test_valid_rule_has_no_errors(self, tmp_path: Path) -> None:
+        """The minimal complete Sigma rule passes validation."""
+        assert self.check(SIGMA_OK, tmp_path) == []
+
+    def test_invalid_id_and_condition(self, tmp_path: Path) -> None:
+        """Invalid UUID ids and conditions without selections are reported."""
         text = SIGMA_OK.replace(VALID_UUID, "non-uuid").replace(
-            "condition: selection", "condition: altro")
-        self.assertEqual(len(self.check(text)), 2)
+            "condition: selection", "condition: altro"
+        )
+        errors = self.check(text, tmp_path)
+        assert len(errors) == 2
 
-    def test_chiavi_mancanti(self):
-        """Le chiavi obbligatorie assenti vengono segnalate."""
-        errs = self.check("title: t\n")
-        self.assertTrue(any("chiavi mancanti" in e for e in errs), errs)
+    def test_missing_keys_are_reported(self, tmp_path: Path) -> None:
+        """Missing mandatory keys are reported."""
+        errors = self.check("title: t\n", tmp_path)
+        assert any("chiavi mancanti" in error for error in errors)
 
-    def test_file_non_mappa(self):
-        """Un file vuoto o una lista non fanno crashare il controllo."""
-        self.assertEqual(len(self.check("")), 1)
-        self.assertEqual(len(self.check("- a\n")), 1)
-        self.assertEqual(len(self.check("detection: [a]\n")), 1)
-
-
-class Main(unittest.TestCase):
-    """Esecuzione completa del validatore."""
-
-    def test_main_ok(self):
-        """Sul repo il validatore esce con 0 e stampa OK."""
-        out = io.StringIO()
-        with contextlib.redirect_stdout(out):
-            self.assertEqual(ca.main(), 0)
-        self.assertIn("OK", out.getvalue())
-
-    def test_main_con_errori(self):
-        """Un errore di compilazione YARA porta a uscita 1."""
-        def broken():
-            return yara_x.compile("rule x { condition: nonesiste }")
-
-        out = io.StringIO()
-        with mock.patch.object(ca, "compile_yara", broken), contextlib.redirect_stdout(out):
-            self.assertEqual(ca.main(), 1)
-        self.assertIn("YARA non compila", out.getvalue())
+    def test_non_mapping_document_is_reported(self, tmp_path: Path) -> None:
+        """Documents that are not mappings produce a validation error."""
+        assert self.check("", tmp_path)
+        assert self.check("- a\n", tmp_path)
+        assert self.check("detection: [a]\n", tmp_path)
 
 
-if __name__ == "__main__":
-    unittest.main()
+class TestYara:
+    """YARA rule compilation and scanning."""
+
+    def test_harmless_text_does_not_match(self, scanner: yara_x.Scanner) -> None:
+        """Ordinary console output must not trigger any rule."""
+        assert list(scanner.scan(b"console.log('hello world');").matching_rules) == []
+
+    def test_synthetic_strings_match(self, scanner: yara_x.Scanner) -> None:
+        """The three synthetic marker strings trigger the dropper rule."""
+        data = (
+            b"__crxlauncher_window_communication "
+            b"__crxlauncher_runtime_message__ pre_cl_loglevel__v3"
+        )
+        assert [match.identifier for match in scanner.scan(data).matching_rules] == [
+            "ChromeExt_CRXLauncher_Dropper"
+        ]
+
+    def test_single_string_is_not_enough(self, scanner: yara_x.Scanner) -> None:
+        """A single marker fragment must not trigger the rule."""
+        assert (
+            list(scanner.scan(b"__crxlauncher_window_communication").matching_rules)
+            == []
+        )
+
+
+class TestMain:
+    """End-to-end entry point of the validator."""
+
+    def test_main_returns_zero_for_valid_repo(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """The shipped artifact set must validate cleanly."""
+        caplog.set_level(logging.INFO)
+        assert artifact_checker.main() == 0
+        assert "OK" in caplog.text
+
+    def test_main_returns_one_for_broken_yara(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A YARA compile failure must produce a failing exit code."""
+
+        def broken(source: str) -> yara_x.Pattern:
+            raise yara_x.CompileError("boom")
+
+        monkeypatch.setattr(artifact_checker, "compile_yara", broken)
+        assert artifact_checker.main() == 1
