@@ -19,3 +19,11 @@ Do not open a public issue for sensitive data.
 Findings on CRXLauncher itself were sent through the Chrome Web Store Trust and
 Safety channel; see the
 README. Do not send samples or exploit code to this repository.
+
+## HTTPS
+
+This repository contains no active network URL using plain HTTP. The two
+`http://*/*` occurrences in `RESEARCH_REPORT.md` are Chrome extension **match
+patterns**: they document which requests the analyzed extension is allowed to
+observe, they are not requests made by this repository. Rewriting them as
+`https://` would alter the recorded evidence, so they are kept as-is.
