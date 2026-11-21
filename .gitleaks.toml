@@ -3,8 +3,3 @@ title = "crxlauncher-threat-research"
 [extend]
 useDefault = true
 
-# Il segreto GA4 qui sotto NON è nostro: è una stringa estratta dall'estensione
-# analizzata, citata come IOC pubblico. Nessun'altra eccezione.
-[allowlist]
-description = "IOC: API secret GA4 incorporato nell'estensione analizzata"
-regexes = ['''NqpDuhxQTVSqAVkEgU4nPQ''']
