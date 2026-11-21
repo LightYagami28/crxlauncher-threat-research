@@ -414,7 +414,7 @@ def collect_errors(root: Path) -> list[str]:
         try:
             compile_yara(path.read_text(encoding="utf-8"))
         except yara_x.CompileError as exc:
-            logger.error("YARA rule %s failed to compile: %s", path.name, exc)
+            logger.exception("YARA rule %s failed to compile: %s", path.name, exc)
             errors.append(f"YARA non compila: {path.name}: {exc}")
     return errors
 
