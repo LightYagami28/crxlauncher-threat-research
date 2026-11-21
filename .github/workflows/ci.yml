@@ -74,16 +74,15 @@ jobs:
         run: |
           python -m coverage run --source=scripts -m pytest tests
           python -m coverage xml -o coverage.xml
-      # Il segreto SONAR_TOKEN manca nelle PR da fork e da Dependabot: l'analisi si salta.
+      - name: Verifica token SonarCloud
+        run: test -n "$SONAR_TOKEN"
       - name: Scansione SonarCloud
-        if: env.SONAR_TOKEN != ''
         uses: SonarSource/sonarqube-scan-action@e805d875275f728fac1885b413934be6d7c63f65  # v8.4.1
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-      # Senza CODACY_PROJECT_TOKEN (PR da fork, Dependabot o segreto non ancora
-      # configurato) l'invio della copertura si salta senza far fallire il job.
+      - name: Verifica token Codacy
+        run: test -n "$CODACY_PROJECT_TOKEN"
       - name: Copertura su Codacy
-        if: env.CODACY_PROJECT_TOKEN != ''
         uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699  # v1.3.0
         with:
           project-token: ${{ env.CODACY_PROJECT_TOKEN }}
