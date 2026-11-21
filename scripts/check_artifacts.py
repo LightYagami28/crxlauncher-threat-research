@@ -29,7 +29,13 @@ logger = logging.getLogger(__name__)
 
 ROOT: Final[Path] = Path(__file__).resolve().parent.parent
 
-DOMAIN_RE: Final[re.Pattern[str]] = re.compile(r"^(?=.{1,253}$)([a-z0-9-]{1,63}\.)+[a-z]{2,}$")
+# I domini sono validati con splitting e controlli lineari sulle singole
+# etichette: il vecchio motivo annidato ([a-z0-9-]{1,63}\.)+ poteva
+# innescare backtracking. Nessuna regex con quantificatori annidati.
+DOMAIN_LABEL_CHARS: Final[frozenset[str]] = frozenset("abcdefghijklmnopqrstuvwxyz0123456789-")
+DOMAIN_MAX_LENGTH: Final[int] = 253
+DOMAIN_LABEL_MAX_LENGTH: Final[int] = 63
+DOMAIN_TLD_MIN_LENGTH: Final[int] = 2
 EXTENSION_ID_RE: Final[re.Pattern[str]] = re.compile(r"^[a-p]{32}$")
 STIX_SPEC_VERSION: Final[str] = "2.1"
 STIX_BUNDLE_TYPE: Final[str] = "bundle"
@@ -54,13 +60,30 @@ type SigmaRuleDocument = dict[str, Any]
 def is_valid_domain(domain: str) -> bool:
     """Return ``True`` when *domain* is a syntactically valid hostname.
 
+    The check walks the string once (``split`` plus per-label membership
+    tests), so its cost is linear in the input length and no backtracking is
+    possible. A hostname has one or more labels of 1-63 characters from
+    ``[a-z0-9-]`` followed by a lowercase alphabetic TLD of at least two
+    characters; the total length is capped at 253 characters.
+
     Args:
         domain: Candidate domain name to validate.
 
     Returns:
         ``True`` if the domain matches the DNS hostname grammar.
     """
-    return bool(DOMAIN_RE.match(domain))
+    if not 1 <= len(domain) <= DOMAIN_MAX_LENGTH:
+        return False
+    parts = domain.split(".")
+    if len(parts) < DOMAIN_TLD_MIN_LENGTH:
+        return False
+    for label in parts[:-1]:
+        if not 1 <= len(label) <= DOMAIN_LABEL_MAX_LENGTH:
+            return False
+        if any(char not in DOMAIN_LABEL_CHARS for char in label):
+            return False
+    tld = parts[-1]
+    return len(tld) >= DOMAIN_TLD_MIN_LENGTH and all("a" <= char <= "z" for char in tld)
 
 
 def is_valid_ip_address(value: str) -> bool:
