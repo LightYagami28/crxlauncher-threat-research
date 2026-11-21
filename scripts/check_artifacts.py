@@ -20,7 +20,7 @@ import logging
 import re
 import uuid
 from pathlib import Path
-from typing import Any, Final, TypeAlias
+from typing import Any, Final
 
 import yaml
 import yara_x
@@ -29,9 +29,7 @@ logger = logging.getLogger(__name__)
 
 ROOT: Final[Path] = Path(__file__).resolve().parent.parent
 
-DOMAIN_RE: Final[re.Pattern[str]] = re.compile(
-    r"^(?=.{1,253}$)([a-z0-9-]{1,63}\.)+[a-z]{2,}$"
-)
+DOMAIN_RE: Final[re.Pattern[str]] = re.compile(r"^(?=.{1,253}$)([a-z0-9-]{1,63}\.)+[a-z]{2,}$")
 EXTENSION_ID_RE: Final[re.Pattern[str]] = re.compile(r"^[a-p]{32}$")
 STIX_SPEC_VERSION: Final[str] = "2.1"
 STIX_BUNDLE_TYPE: Final[str] = "bundle"
@@ -47,10 +45,10 @@ SIGMA_REQUIRED_KEYS: Final[frozenset[str]] = frozenset(
     }
 )
 
-IOCData: TypeAlias = dict[str, Any]
-CSVRow: TypeAlias = dict[str, str]
-STIXObject: TypeAlias = dict[str, Any]
-SigmaRuleDocument: TypeAlias = dict[str, Any]
+type IOCData = dict[str, Any]
+type CSVRow = dict[str, str]
+type STIXObject = dict[str, Any]
+type SigmaRuleDocument = dict[str, Any]
 
 
 def is_valid_domain(domain: str) -> bool:
@@ -148,14 +146,10 @@ def check_csv_rows(data: IOCData, rows: list[CSVRow]) -> list[str]:
     json_values: dict[str, set[str]] = {
         "Extension ID": {str(data.get("extension_id") or "")},
         "Domain": {str(domain) for domain in data.get("domains") or []},
-        "IP Address": {
-            str(ip_address) for ip_address in data.get("ip_addresses") or []
-        },
+        "IP Address": {str(ip_address) for ip_address in data.get("ip_addresses") or []},
         "GA4 ID": {str((data.get("telemetry") or {}).get("measurement_id") or "")},
         "Storage Key": {str(key) for key in data.get("storage_keys") or []},
-        "Namespace": {
-            str(namespace) for namespace in data.get("window_message_namespaces") or []
-        },
+        "Namespace": {str(namespace) for namespace in data.get("window_message_namespaces") or []},
     }
     errors: list[str] = []
     for row in rows:
@@ -330,14 +324,14 @@ def check_sigma_document(doc: SigmaRuleDocument, source: str) -> list[str]:
     return errors
 
 
-def compile_yara(source: str) -> yara_x.Pattern:
+def compile_yara(source: str) -> yara_x.Rules:
     """Compile a YARA rule source string.
 
     Args:
         source: YARA rule source code.
 
     Returns:
-        Compiled :class:`yara_x.Pattern` ready for scanning.
+        Compiled :class:`yara_x.Rules` ready for scanning.
 
     Raises:
         yara_x.CompileError: When the rule source does not compile.
@@ -359,9 +353,7 @@ def load_iocs(root: Path) -> tuple[IOCData, list[CSVRow]]:
         json.JSONDecodeError: When the JSON document is malformed.
     """
     data = json.loads((root / "threat-intel" / "iocs.json").read_text(encoding="utf-8"))
-    with (root / "threat-intel" / "iocs.csv").open(
-        encoding="utf-8", newline=""
-    ) as handle:
+    with (root / "threat-intel" / "iocs.csv").open(encoding="utf-8", newline="") as handle:
         rows = list(csv.DictReader(handle))
     return data, rows
 
@@ -391,9 +383,7 @@ def collect_errors(root: Path) -> list[str]:
         List of human-readable error messages (empty when everything is valid).
     """
     errors: list[str] = check_iocs(*load_iocs(root))
-    stix = json.loads(
-        (root / "threat-intel" / "stix_bundle.json").read_text(encoding="utf-8")
-    )
+    stix = json.loads((root / "threat-intel" / "stix_bundle.json").read_text(encoding="utf-8"))
     errors.extend(check_stix(stix))
     for path in sorted((root / "rules").glob("*.yml")):
         errors.extend(check_sigma(path))
