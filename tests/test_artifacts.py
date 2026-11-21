@@ -70,6 +70,14 @@ class TestIocValidation:
             ("bad domain", False),
             ("esempio.com", True),
             ("sub.example.co.uk", True),
+            ("", False),
+            ("a" * 254, False),
+            ("a." * 130, False),
+            ("a" * 64 + ".com", False),
+            ("a_1.example.com", False),
+            ("sub..example.com", False),
+            ("sub.example.c", False),
+            ("sub.example.c0m", False),
         ],
     )
     def test_domain_validation(self, domain: str, should_be_valid: bool) -> None:
