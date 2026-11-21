@@ -156,6 +156,59 @@ def check_extension_id(data: IOCData) -> list[str]:
     return [f"extension_id non valido (32 caratteri a-p): {extension_id}"]
 
 
+def _strings_from(data: IOCData, key: str) -> set[str]:
+    """Return the string form of all values stored under ``key``.
+
+    Args:
+        data: Parsed content of ``threat-intel/iocs.json``.
+        key: Name of the list field to read.
+
+    Returns:
+        Set of string values (empty when the field is missing or empty).
+    """
+    return {str(value) for value in (data.get(key) or [])}
+
+
+def _json_ioc_values(data: IOCData) -> dict[str, set[str]]:
+    """Build the per-column sets used to cross-check CSV rows.
+
+    Args:
+        data: Parsed content of ``threat-intel/iocs.json``.
+
+    Returns:
+        Mapping from CSV ``Type`` to the allowed string values.
+    """
+    telemetry = data.get("telemetry") or {}
+    return {
+        "Extension ID": {str(data.get("extension_id") or "")},
+        "Domain": _strings_from(data, "domains"),
+        "IP Address": _strings_from(data, "ip_addresses"),
+        "GA4 ID": {str(telemetry.get("measurement_id") or "")},
+        "Storage Key": _strings_from(data, "storage_keys"),
+        "Namespace": _strings_from(data, "window_message_namespaces"),
+    }
+
+
+def _check_csv_row(row: CSVRow, json_values: dict[str, set[str]]) -> list[str]:
+    """Check one CSV row against the JSON source of truth.
+
+    Args:
+        row: Single row read from ``threat-intel/iocs.csv``.
+        json_values: Mapping from CSV ``Type`` to allowed string values.
+
+    Returns:
+        List containing one error message, or empty when the row is valid.
+    """
+    row_type = row.get("Type")
+    known = json_values.get(row_type) if row_type is not None else None
+    if known is None:
+        return [f"tipo CSV sconosciuto: {row_type}"]
+    value = str(row.get("Value") or "")
+    if value not in known:
+        return [f"CSV non presente nel JSON: {row_type} {row.get('Value')}"]
+    return []
+
+
 def check_csv_rows(data: IOCData, rows: list[CSVRow]) -> list[str]:
     """Check that every CSV IOC row is covered by the JSON source of truth.
 
@@ -166,23 +219,10 @@ def check_csv_rows(data: IOCData, rows: list[CSVRow]) -> list[str]:
     Returns:
         List of validation error messages (empty when consistent).
     """
-    json_values: dict[str, set[str]] = {
-        "Extension ID": {str(data.get("extension_id") or "")},
-        "Domain": {str(domain) for domain in data.get("domains") or []},
-        "IP Address": {str(ip_address) for ip_address in data.get("ip_addresses") or []},
-        "GA4 ID": {str((data.get("telemetry") or {}).get("measurement_id") or "")},
-        "Storage Key": {str(key) for key in data.get("storage_keys") or []},
-        "Namespace": {str(namespace) for namespace in data.get("window_message_namespaces") or []},
-    }
+    json_values = _json_ioc_values(data)
     errors: list[str] = []
     for row in rows:
-        row_type = row.get("Type")
-        known = json_values.get(row_type) if row_type is not None else None
-        if known is None:
-            errors.append(f"tipo CSV sconosciuto: {row_type}")
-            continue
-        if str(row.get("Value") or "") not in known:
-            errors.append(f"CSV non presente nel JSON: {row_type} {row.get('Value')}")
+        errors.extend(_check_csv_row(row, json_values))
     return errors
 
 
