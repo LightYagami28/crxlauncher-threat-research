@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: Segnalazione di sicurezza
-    url: mailto:maule2703@gmail.com
+    url: https://github.com/LightYagami28
     about: Non aprire issue pubbliche per vulnerabilità.
   - name: Domande e proposte
     url: https://github.com/LightYagami28/crxlauncher-threat-research/discussions
