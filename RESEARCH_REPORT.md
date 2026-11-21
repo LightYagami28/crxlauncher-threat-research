@@ -366,7 +366,7 @@ The extension communicates with Google Analytics 4 via the Measurement Protocol:
 
 - **Endpoint:** `https://www.google-analytics.com/mp/collect`
 - **Measurement ID:** `G-Z14126F651`
-- **API Secret:** `NqpDuhxQTVSqAVkEgU4nPQ`
+- **API Secret:** `<GA4_API_SECRET>`
 
 The telemetry pipeline assigns a persistent UUID (`crxlauncher__uuid`),
 generates session tokens, tracks extension lifecycles (`installed`, `updated`),
@@ -418,7 +418,7 @@ policy.
   - `2606:4700:3034::ac43:d9d3`
   - `2606:4700:3032::6815:5664`
 - **Google Analytics Tracking ID:** `G-Z14126F651`
-- **GA4 API Secret:** `NqpDuhxQTVSqAVkEgU4nPQ`
+- **GA4 API Secret:** `<GA4_API_SECRET>`
 
 ### 5.3 Host Artifacts (Local Storage Keys)
 

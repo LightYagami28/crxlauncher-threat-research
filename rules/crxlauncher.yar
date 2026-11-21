@@ -28,7 +28,7 @@ rule ChromeExt_CRXLauncher_Dropper {
         
         // Telemetry endpoint & credentials
         $s7 = "G-Z14126F651" ascii wide
-        $s8 = "NqpDuhxQTVSqAVkEgU4nPQ" ascii wide
+        $s8 = "<GA4_API_SECRET>" ascii wide
 
         // Dynamic execution in sandbox
         $s9 = "new Function(a.js)()" ascii wide
