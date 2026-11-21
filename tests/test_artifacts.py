@@ -1,4 +1,4 @@
-"""Pytest test suite for the CRXLauncher artifact static validator."""
+"""Test della validazione statica degli artefatti di threat intelligence."""
 
 from __future__ import annotations
 
@@ -25,38 +25,42 @@ level: low
 """
 
 
+def verify(condition: object, message: str = "condizione non soddisfatta") -> None:
+    """Segnala un fallimento esplicito senza usare ``assert`` nei test."""
+    if not condition:
+        pytest.fail(message)
+
+
 @pytest.fixture(scope="module")
 def iocs() -> tuple[dict[str, Any], list[dict[str, str]]]:
-    """Load the repository IOC artifacts (JSON source of truth + CSV rows)."""
+    """Carica la fonte di verità JSON e le righe CSV degli IOC."""
     return artifact_checker.load_iocs(artifact_checker.ROOT)
 
 
 @pytest.fixture(scope="module")
 def stix_bundle() -> dict[str, Any]:
-    """Load the repository STIX bundle."""
+    """Carica il bundle STIX presente nel repository."""
     path = artifact_checker.ROOT / "threat-intel" / "stix_bundle.json"
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 @pytest.fixture(scope="module")
 def scanner() -> yara_x.Scanner:
-    """Compile the repository YARA rule once per test module."""
-    source = (artifact_checker.ROOT / "rules" / "crxlauncher.yar").read_text(
-        encoding="utf-8"
-    )
+    """Compila una volta la regola YARA del repository."""
+    source = (artifact_checker.ROOT / "rules" / "crxlauncher.yar").read_text(encoding="utf-8")
     return yara_x.Scanner(artifact_checker.compile_yara(source))
 
 
 class TestIocValidation:
-    """Validation of the IOC data structures."""
+    """Validazione della struttura degli IOC."""
 
     def test_valid_values_produce_no_errors(
         self, iocs: tuple[dict[str, Any], list[dict[str, str]]]
     ) -> None:
-        """Well-formed domains, IPs and extension ids yield no error."""
+        """Dominio, IP e ID estensione ben formati non producono errori."""
         data, _rows = iocs
-        assert artifact_checker.check_ioc_values(data) == []
-        assert artifact_checker.check_extension_id(data) == []
+        verify(artifact_checker.check_ioc_values(data) == [])
+        verify(artifact_checker.check_extension_id(data) == [])
 
     @pytest.mark.parametrize(
         ("domain", "should_be_valid"),
@@ -68,8 +72,8 @@ class TestIocValidation:
         ],
     )
     def test_domain_validation(self, domain: str, should_be_valid: bool) -> None:
-        """Domain validation accepts valid hostnames and rejects malformed ones."""
-        assert artifact_checker.is_valid_domain(domain) is should_be_valid
+        """La validazione accetta host validi e respinge quelli malformati."""
+        verify(artifact_checker.is_valid_domain(domain) is should_be_valid)
 
     @pytest.mark.parametrize(
         ("ip_address", "should_be_valid"),
@@ -81,8 +85,8 @@ class TestIocValidation:
         ],
     )
     def test_ip_validation(self, ip_address: str, should_be_valid: bool) -> None:
-        """IP validation accepts parseable addresses and rejects garbage."""
-        assert artifact_checker.is_valid_ip_address(ip_address) is should_be_valid
+        """La validazione accetta indirizzi IP validi e respinge il resto."""
+        verify(artifact_checker.is_valid_ip_address(ip_address) is should_be_valid)
 
     @pytest.mark.parametrize(
         ("extension_id", "should_be_valid"),
@@ -92,22 +96,21 @@ class TestIocValidation:
             ("A" * 32, False),
         ],
     )
-    def test_extension_id_validation(
-        self, extension_id: str, should_be_valid: bool
-    ) -> None:
-        """Extension ids must be 32 lowercase ``[a-p]`` characters."""
-        assert artifact_checker.is_valid_extension_id(extension_id) is should_be_valid
+    def test_extension_id_validation(self, extension_id: str, should_be_valid: bool) -> None:
+        """L'ID estensione deve avere 32 caratteri ``[a-p]`` minuscoli."""
+        verify(artifact_checker.is_valid_extension_id(extension_id) is should_be_valid)
 
 
 class TestChecker:
-    """Cross-file IOC consistency checks."""
+    """Coerenza degli IOC tra i file."""
 
     def test_csv_extra_row_is_detected(
         self, iocs: tuple[dict[str, Any], list[dict[str, str]]]
     ) -> None:
-        """A CSV row missing from the JSON source of truth is reported."""
+        """Una riga CSV assente dalla fonte JSON viene segnalata."""
         data, rows = iocs
-        rows = rows + [
+        rows = [
+            *rows,
             {
                 "Type": "Domain",
                 "Value": "esempio.invalid",
@@ -115,34 +118,30 @@ class TestChecker:
                 "Severity": "",
             },
         ]
-        assert artifact_checker.check_iocs(data, rows)
+        verify(artifact_checker.check_iocs(data, rows))
 
     def test_consistent_iocs_are_valid(
         self, iocs: tuple[dict[str, Any], list[dict[str, str]]]
     ) -> None:
-        """The shipped IOC set must be internally consistent."""
-        assert artifact_checker.check_iocs(*iocs) == []
+        """Gli IOC presenti nel repository sono coerenti."""
+        verify(artifact_checker.check_iocs(*iocs) == [])
 
 
 class TestStix:
-    """STIX bundle validation."""
+    """Validazione del bundle STIX."""
 
     def test_inconsistent_id_is_detected(self) -> None:
-        """STIX ids must start with the object type and hold a valid UUID."""
-        errors = artifact_checker.check_stix_id(
-            {"type": "malware", "id": "tool--" + VALID_UUID}
-        )
-        assert len(errors) == 1
+        """L'ID STIX deve iniziare col tipo e contenere un UUID valido."""
+        errors = artifact_checker.check_stix_id({"type": "malware", "id": "tool--" + VALID_UUID})
+        verify(len(errors) == 1)
 
     def test_invalid_uuid_is_detected(self) -> None:
-        """Malformed STIX UUIDs are reported."""
-        errors = artifact_checker.check_stix_id(
-            {"type": "malware", "id": "malware--nope"}
-        )
-        assert errors and "UUID non valido" in errors[0]
+        """Gli UUID STIX malformati vengono segnalati."""
+        errors = artifact_checker.check_stix_id({"type": "malware", "id": "malware--nope"})
+        verify(errors and "UUID non valido" in errors[0])
 
     def test_incomplete_bundle_is_detected(self) -> None:
-        """Bundles with wrong type or incomplete indicators are reported."""
+        """Bundle col tipo sbagliato o indicatori incompleti vengono segnalati."""
         indicator = {
             "type": "indicator",
             "id": f"indicator--{VALID_UUID}",
@@ -151,90 +150,87 @@ class TestStix:
             "modified": "2026-01-01T00:00:00Z",
         }
         errors = artifact_checker.check_stix({"type": "altro", "objects": [indicator]})
-        assert errors == [
-            "STIX: type deve essere 'bundle'",
-            f"STIX: indicator incompleto indicator--{VALID_UUID}",
-        ]
-        incomplete = {k: v for k, v in indicator.items() if k != "pattern"}
-        assert artifact_checker.check_stix_object(incomplete)
+        verify(
+            errors
+            == [
+                "STIX: type deve essere 'bundle'",
+                f"STIX: indicator incompleto indicator--{VALID_UUID}",
+            ]
+        )
+        incomplete = {key: value for key, value in indicator.items() if key != "pattern"}
+        verify(artifact_checker.check_stix_object(incomplete))
 
 
 class TestSigma:
-    """Sigma rule validation."""
+    """Validazione delle regole Sigma."""
 
     def check(self, text: str, tmp_path: Path) -> list[str]:
-        """Write a temporary Sigma rule and validate it."""
+        """Scrive una regola Sigma temporanea e la valida."""
         path = tmp_path / "rule.yml"
         path.write_text(text, encoding="utf-8")
         return artifact_checker.check_sigma(path)
 
     def test_valid_rule_has_no_errors(self, tmp_path: Path) -> None:
-        """The minimal complete Sigma rule passes validation."""
-        assert self.check(SIGMA_OK, tmp_path) == []
+        """La regola Sigma completa supera la validazione."""
+        verify(self.check(SIGMA_OK, tmp_path) == [])
 
     def test_invalid_id_and_condition(self, tmp_path: Path) -> None:
-        """Invalid UUID ids and conditions without selections are reported."""
+        """UUID non valido e condizione senza selection vengono segnalati."""
         text = SIGMA_OK.replace(VALID_UUID, "non-uuid").replace(
             "condition: selection", "condition: altro"
         )
         errors = self.check(text, tmp_path)
-        assert len(errors) == 2
+        verify(len(errors) == 2)
 
     def test_missing_keys_are_reported(self, tmp_path: Path) -> None:
-        """Missing mandatory keys are reported."""
+        """Le chiavi obbligatorie mancanti vengono segnalate."""
         errors = self.check("title: t\n", tmp_path)
-        assert any("chiavi mancanti" in error for error in errors)
+        verify(any("chiavi mancanti" in error for error in errors))
 
     def test_non_mapping_document_is_reported(self, tmp_path: Path) -> None:
-        """Documents that are not mappings produce a validation error."""
-        assert self.check("", tmp_path)
-        assert self.check("- a\n", tmp_path)
-        assert self.check("detection: [a]\n", tmp_path)
+        """I documenti che non sono mapping producono un errore."""
+        verify(self.check("", tmp_path))
+        verify(self.check("- a\n", tmp_path))
+        verify(self.check("detection: [a]\n", tmp_path))
 
 
 class TestYara:
-    """YARA rule compilation and scanning."""
+    """Compilazione e scansione della regola YARA."""
 
     def test_harmless_text_does_not_match(self, scanner: yara_x.Scanner) -> None:
-        """Ordinary console output must not trigger any rule."""
-        assert list(scanner.scan(b"console.log('hello world');").matching_rules) == []
+        """L'output ordinario non deve attivare alcuna regola."""
+        verify(list(scanner.scan(b"console.log('hello world');").matching_rules) == [])
 
     def test_synthetic_strings_match(self, scanner: yara_x.Scanner) -> None:
-        """The three synthetic marker strings trigger the dropper rule."""
+        """Le tre stringhe sintetiche attivano la regola dropper."""
         data = (
             b"__crxlauncher_window_communication "
             b"__crxlauncher_runtime_message__ pre_cl_loglevel__v3"
         )
-        assert [match.identifier for match in scanner.scan(data).matching_rules] == [
-            "ChromeExt_CRXLauncher_Dropper"
-        ]
+        verify(
+            [match.identifier for match in scanner.scan(data).matching_rules]
+            == ["ChromeExt_CRXLauncher_Dropper"]
+        )
 
     def test_single_string_is_not_enough(self, scanner: yara_x.Scanner) -> None:
-        """A single marker fragment must not trigger the rule."""
-        assert (
-            list(scanner.scan(b"__crxlauncher_window_communication").matching_rules)
-            == []
-        )
+        """Una singola stringa sintetica non attiva la regola."""
+        verify(list(scanner.scan(b"__crxlauncher_window_communication").matching_rules) == [])
 
 
 class TestMain:
-    """End-to-end entry point of the validator."""
+    """Punto di ingresso end-to-end del validatore."""
 
-    def test_main_returns_zero_for_valid_repo(
-        self, caplog: pytest.LogCaptureFixture
-    ) -> None:
-        """The shipped artifact set must validate cleanly."""
+    def test_main_returns_zero_for_valid_repo(self, caplog: pytest.LogCaptureFixture) -> None:
+        """L'insieme di artefatti distribuito supera la validazione."""
         caplog.set_level(logging.INFO)
-        assert artifact_checker.main() == 0
-        assert "OK" in caplog.text
+        verify(artifact_checker.main() == 0)
+        verify("OK" in caplog.text)
 
-    def test_main_returns_one_for_broken_yara(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        """A YARA compile failure must produce a failing exit code."""
+    def test_main_returns_one_for_broken_yara(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Un errore di compilazione YARA produce un codice di uscita fallente."""
 
-        def broken(source: str) -> yara_x.Pattern:
+        def broken(source: str) -> yara_x.Rules:
             raise yara_x.CompileError("boom")
 
         monkeypatch.setattr(artifact_checker, "compile_yara", broken)
-        assert artifact_checker.main() == 1
+        verify(artifact_checker.main() == 1)

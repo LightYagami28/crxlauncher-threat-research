@@ -23,6 +23,7 @@ jobs:
           python -m pip install --only-binary :all:
           bandit==1.9.4 coverage==7.17.2 mypy==1.18.2 pip-audit==2.9.0
           pytest==9.2.0 pytest-cov==7.0.0 ruff==0.17.6
+          types-PyYAML==6.0.12.20261113
       - name: Lint (ruff)
         run: ruff check .
       - name: Check formatting (ruff format)
