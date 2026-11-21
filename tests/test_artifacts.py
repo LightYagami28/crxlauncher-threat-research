@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from pathlib import Path
 from typing import Any
 
@@ -69,11 +70,38 @@ class TestIocValidation:
             ("bad domain", False),
             ("esempio.com", True),
             ("sub.example.co.uk", True),
+            ("", False),
+            ("a" * 254, False),
+            ("a." * 130, False),
+            ("a" * 64 + ".com", False),
+            ("a_1.example.com", False),
+            ("sub..example.com", False),
+            ("sub.example.c", False),
+            ("sub.example.c0m", False),
         ],
     )
     def test_domain_validation(self, domain: str, should_be_valid: bool) -> None:
         """La validazione accetta host validi e respinge quelli malformati."""
         verify(artifact_checker.is_valid_domain(domain) is should_be_valid)
+
+    def test_domain_validation_is_linear_on_pathological_input(self) -> None:
+        """Input patologico (etichette ripetute + suffisso non valido): tempo lineare."""
+
+        def elapsed(labels: int, repeats: int = 200) -> float:
+            candidate = "a." * labels + "!"
+            start = time.perf_counter()
+            for _ in range(repeats):
+                verify(artifact_checker.is_valid_domain(candidate) is False)
+            return time.perf_counter() - start
+
+        # 121 e 241 caratteri: entrambi entro il limite di 253, il secondo
+        # ha il doppio delle etichette. Un motore con backtracking crescerebbe
+        # molto piu che linearmente (o esploderebbe); qui il rapporto resta
+        # vicino a 2, con un tetto assoluto generoso contro errori di timing.
+        small = elapsed(60)
+        large = elapsed(120)
+        verify(large < 1.0)
+        verify(large < small * 10)
 
     @pytest.mark.parametrize(
         ("ip_address", "should_be_valid"),
