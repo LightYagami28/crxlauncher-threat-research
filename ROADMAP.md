@@ -12,3 +12,12 @@ Open items, as of 2026-11-16. The research plan itself is in [SPEC.md](SPEC.md#r
 7. Port the YARA rules into the Sentinella scanner.
 8. Redact the GA4 secret of the analysed extension in the published material.
 9. Decide whether `poc/` stays in the public repository.
+
+## Verifica 2026-11-21
+
+Rianalisi senza soppressioni completata. Comandi: `ruff check .`, `ruff format --check .`,
+`mypy`, `pytest tests --cov=scripts --cov-report=term-missing` (26 test, copertura 95%),
+`bandit -r scripts tests` (0 issue), `pip-audit -r requirements.txt` (0 vulnerabilita'),
+`yamllint -c .yamllint rules .github` e `python scripts/check_artifacts.py` (exit 0).
+Corretti alias di tipo, sezione di configurazione coverage, stub PyYAML in CI e
+l'annuncio di tipo delle regole YARA compilate.
