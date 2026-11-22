@@ -48,4 +48,3 @@ and no test assertion was removed.
   `check_ioc_values` are above the advisory threshold
   (9 and 10 against 8) but below the critical one.
 - `Prospector_vulture` (1): object used only by a test.
-
