@@ -1,7 +1,7 @@
 # Glossary
 
 | Term | Meaning |
-|---|---|
+| --- | --- |
 | CRX | Chrome extension package format. |
 | Manifest V3 (MV3) | Current Chrome extension platform, which forbids remotely hosted code. |
 | `postMessage` | Cross-window messaging API; the extension bridge accepts messages without checking the origin. |
