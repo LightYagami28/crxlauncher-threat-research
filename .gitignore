@@ -30,3 +30,6 @@ Thumbs.db
 # Log
 *.log
 bot.log
+
+# Cache locale di sonar-scanner
+.scannerwork/
