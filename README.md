@@ -1,9 +1,14 @@
 # CRXLauncher: Threat Intelligence, Vulnerability Dossier & Forensic Analysis
 
-![CI](https://github.com/LightYagami28/crxlauncher-threat-research/actions/workflows/ci.yml/badge.svg) ![License](https://img.shields.io/github/license/LightYagami28/crxlauncher-threat-research) ![Stars](https://img.shields.io/github/stars/LightYagami28/crxlauncher-threat-research) ![Python](https://img.shields.io/badge/python-3.12%2B-blue) ![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)
+![CI](https://github.com/LightYagami28/crxlauncher-threat-research/actions/workflows/ci.yml/badge.svg)
+![License](https://img.shields.io/github/license/LightYagami28/crxlauncher-threat-research)
+![Stars](https://img.shields.io/github/stars/LightYagami28/crxlauncher-threat-research)
+![Python](https://img.shields.io/badge/python-3.12%2B-blue)
+![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)
 
-Static threat-intelligence artifacts (IOCs, STIX bundles, Sigma rules, YARA rules) for the
-CRXLauncher Chrome extension research project, plus the tooling that validates their integrity.
+Static threat-intelligence artifacts (IOCs, STIX bundles, Sigma rules, YARA
+rules) for the CRXLauncher Chrome extension research project, plus the tooling
+that validates their integrity.
 
 ## Installazione
 
@@ -19,8 +24,8 @@ python -m pip install --require-hashes --only-binary :all: -r requirements.txt
 python scripts/check_artifacts.py
 ```
 
-The checker exits with code `0` when every artifact (IOC list, STIX bundle, Sigma and YARA rules) is
-valid, and with code `1` otherwise.
+The checker exits with code `0` when every artifact (IOC list, STIX bundle,
+Sigma and YARA rules) is valid, and with code `1` otherwise.
 
 ## Sviluppo
 
@@ -38,7 +43,8 @@ pip-audit -r requirements.txt
 
 Vedi [CONTRIBUTING.md](CONTRIBUTING.md). Per nuovi artefatti:
 
-1. Aggiornare `threat-intel/iocs.json` (fonte di verità) e `threat-intel/iocs.csv`.
+1. Aggiornare `threat-intel/iocs.json` (fonte di verità) e
+   `threat-intel/iocs.csv`.
 2. Aggiornare `threat-intel/stix_bundle.json`.
 3. Aggiungere/aggiornare le regole in `rules/`.
 4. Eseguire `python scripts/check_artifacts.py` e la suite pytest.

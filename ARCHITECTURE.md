@@ -1,9 +1,10 @@
 # Architecture
 
-This is a research repository, not an application. The pieces and how they relate:
+This is a research repository, not an application. The pieces and how they
+relate:
 
 | Path | Role |
-|---|---|
+| --- | --- |
 | `RESEARCH_REPORT.md`, `CRXLauncher_Deep_Forensic_Analysis_2026.pdf` | The analysis itself |
 | `SPEC.md` | Scope, constraints, roadmap, open decisions |
 | `threat-intel/iocs.json` | Source of truth for indicators (most complete) |
@@ -17,7 +18,8 @@ This is a research repository, not an application. The pieces and how they relat
 
 ## Validation flow
 
-`check_artifacts.py` loads `iocs.json` and `iocs.csv`, validates value formats (extension id,
-domains, IP addresses), checks CSV rows against the JSON, validates STIX identifiers and required
-fields, and compiles the YARA rule with `yara-x`. CI (`.github/workflows/ci.yml`) runs `yamllint`
-on `rules` and `.github`, then the validator, then the tests with coverage.
+`check_artifacts.py` loads `iocs.json` and `iocs.csv`, validates value formats
+(extension id, domains, IP addresses), checks CSV rows against the JSON,
+validates STIX identifiers and required fields, and compiles the YARA rule with
+`yara-x`. CI (`.github/workflows/ci.yml`) runs `yamllint` on `rules` and
+`.github`, then the validator, then the tests with coverage.
