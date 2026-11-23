@@ -30,7 +30,7 @@ Sigma and YARA rules) is valid, and with code `1` otherwise.
 ## Sviluppo
 
 ```bash
-python -m pip install --only-binary :all: bandit==1.9.4 coverage==7.17.2 mypy==1.18.2 pip-audit==2.9.0 pytest==9.2.0 pytest-cov==7.0.0 ruff==0.17.6
+python -m pip install --only-binary :all: bandit==1.9.4 coverage==7.17.4 mypy==2.4.1 pip-audit==2.10.1 pytest==9.2.0 pytest-cov==7.1.0 ruff==0.17.6
 ruff check .
 ruff format --check .
 mypy
