@@ -24,21 +24,21 @@ documentazione CC BY 4.0, regole di rilevamento con licenza MIT (`LICENSE`,
 | Regole Sigma (rete e filesystem) | struttura validata | `rules/sigma_crxlauncher_network.yml`, `rules/sigma_crxlauncher_filesystem.yml` |
 | IoC e bundle STIX | coerenti tra loro | `threat-intel/iocs.json`, `iocs.csv`, `stix_bundle.json` |
 | Pagina di sonda difensiva | presente | `poc/postmessage_audit.html` |
-| CI | yamllint, validazione artefatti, unittest, gitleaks | `.github/workflows/ci.yml` |
+| CI | yamllint, validazione artefatti, pytest, gitleaks | `.github/workflows/ci.yml` |
 | Dipendenze Python | bloccate con hash | `requirements.in`, `requirements.txt` |
 | Citazione | presente | `CITATION.cff` |
 
 Esito delle verifiche eseguite il 2026-11-11 (ambiente virtuale isolato,
 installazione con `--require-hashes --only-binary :all:`): `yamllint -c
 .yamllint rules .github` senza avvisi; `python scripts/check_artifacts.py`
-stampa `OK`; `python -m unittest discover -s tests` esegue 8 test, tutti
+stampa `OK`; `python -m pytest tests --cov=scripts` esegue 35 test, tutti
 superati.
 
 | Componente | Versione | File |
 | --- | --- | --- |
 | Python (CI) | 3.14 | `ci.yml` |
-| yara-x | 1.23.0 | `requirements.in`, `requirements.txt` |
-| PyYAML | 6.0.3 | `requirements.in` |
+| yara-x | 1.24.0 | `requirements.in`, `requirements.txt` |
+| PyYAML | 6.0.4 | `requirements.in` |
 | yamllint | 1.38.0 | `requirements.in` |
 | pathspec | 1.1.1 (dipendenza transitiva) | `requirements.txt` |
 | gitleaks-action | v3.0.0 (SHA) | `ci.yml` |
@@ -46,7 +46,7 @@ superati.
 | actions/setup-python | v7.1.0 (SHA) | `ci.yml` |
 
 Incongruenza corretta in questa revisione: il vecchio SPEC indicava yara-x
-1.22.1; il file dei requisiti ha 1.23.0.
+1.23.0; il file dei requisiti ha 1.24.0.
 
 ## Architettura
 
