@@ -17,8 +17,8 @@ Do not open a public issue for sensitive data.
 ## Findings about the analyzed extension
 
 Findings on CRXLauncher itself were sent through the Chrome Web Store Trust and
-Safety channel; see the
-README. Do not send samples or exploit code to this repository.
+Safety channel; the disclosure step is recorded in point 6 of
+[SPEC.md](SPEC.md). Do not send samples or exploit code to this repository.
 
 ## HTTPS
 
