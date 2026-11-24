@@ -21,9 +21,9 @@ jobs:
       - name: Install dev tooling
         run: >-
           python -m pip install --only-binary :all:
-          bandit==1.9.4 coverage==7.17.2 mypy==1.18.2 pip-audit==2.9.0
-          pytest==9.2.0 pytest-cov==7.0.0 ruff==0.17.6
-          types-PyYAML==6.0.12.20261113
+          bandit==1.9.4 coverage==7.17.5 mypy==2.4.1 pip-audit==2.10.1
+          pytest==9.2.0 pytest-cov==7.1.0 ruff==0.17.6
+          types-PyYAML==6.0.12.20261122
       - name: Lint (ruff)
         run: ruff check .
       - name: Check formatting (ruff format)
@@ -69,7 +69,7 @@ jobs:
       - name: Install dev tooling
         run: >-
           python -m pip install --only-binary :all:
-          coverage==7.17.2 pytest==9.2.0 pytest-cov==7.0.0
+          coverage==7.17.5 pytest==9.2.0 pytest-cov==7.1.0
       - name: Test con copertura
         run: |
           python -m coverage run --source=scripts -m pytest tests
@@ -77,7 +77,7 @@ jobs:
       - name: Verifica token SonarCloud
         run: test -n "$SONAR_TOKEN"
       - name: Scansione SonarCloud
-        uses: SonarSource/sonarqube-scan-action@e805d875275f728fac1885b413934be6d7c63f65  # v8.4.1
+        uses: SonarSource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4  # v8.5.0
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
       - name: Copertura su Codacy
