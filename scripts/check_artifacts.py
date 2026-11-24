@@ -80,6 +80,8 @@ def is_valid_domain(domain: str) -> bool:
     for label in parts[:-1]:
         if not 1 <= len(label) <= DOMAIN_LABEL_MAX_LENGTH:
             return False
+        if label.startswith("-") or label.endswith("-"):
+            return False
         if any(char not in DOMAIN_LABEL_CHARS for char in label):
             return False
     tld = parts[-1]
