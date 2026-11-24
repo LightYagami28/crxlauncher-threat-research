@@ -74,9 +74,12 @@ jobs:
         run: |
           python -m coverage run --source=scripts -m pytest tests
           python -m coverage xml -o coverage.xml
+      # Dependabot non riceve i secret di Actions: salta la scansione invece di fallire.
       - name: Verifica token SonarCloud
+        if: github.actor != 'dependabot[bot]'
         run: test -n "$SONAR_TOKEN"
       - name: Scansione SonarCloud
+        if: github.actor != 'dependabot[bot]'
         uses: SonarSource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4  # v8.5.0
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
