@@ -18,7 +18,7 @@ python -m venv .venv
 .venv/bin/python -m pip install --require-hashes --only-binary :all: -r requirements.txt
 .venv/bin/yamllint -c .yamllint rules .github
 .venv/bin/python scripts/check_artifacts.py
-.venv/bin/python -m unittest discover -s tests -v
+.venv/bin/python -m pytest tests --cov=scripts
 ```
 
 On Windows use `.venv\Scripts\python`. The same steps run in CI.
