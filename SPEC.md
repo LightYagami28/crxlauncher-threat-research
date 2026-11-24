@@ -28,10 +28,10 @@ documentazione CC BY 4.0, regole di rilevamento con licenza MIT (`LICENSE`,
 | Dipendenze Python | bloccate con hash | `requirements.in`, `requirements.txt` |
 | Citazione | presente | `CITATION.cff` |
 
-Esito delle verifiche eseguite il 2026-11-11 (ambiente virtuale isolato,
+Esito delle verifiche eseguite il 2026-11-24 (ambiente virtuale isolato,
 installazione con `--require-hashes --only-binary :all:`): `yamllint -c
 .yamllint rules .github` senza avvisi; `python scripts/check_artifacts.py`
-stampa `OK`; `python -m pytest tests --cov=scripts` esegue 35 test, tutti
+stampa `OK`; `python -m pytest tests --cov=scripts` esegue 38 test, tutti
 superati.
 
 | Componente | Versione | File |
